@@ -28,7 +28,7 @@ class ProxyServiceTest extends TestCase
                 ->never();
         });
 
-        $this->expectException(\Exception::class);
+        $this->expectException(\TypeError::class);
 
         $unit = new ProxyService($clientMock, null);
         $unit->getListOfProxies();

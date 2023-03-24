@@ -1,3 +1,6 @@
+Time Spent on Challenge:
+24th: 1653 -> 1827
+
 # iHASCO Technical Challenge
 
 ## Introduction
