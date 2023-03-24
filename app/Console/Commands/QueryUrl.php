@@ -19,6 +19,7 @@ class QueryUrl extends Command
     {
         // Find a proxy.
 
+        // @FIXME: rewrite as ProxyService and accept dependencies via constructor (maybe even service provider)
         $curl = curl_init('https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=yes&anonymity=all');
 
         curl_setopt($curl, CURLOPT_HEADER, 0);
@@ -32,8 +33,12 @@ class QueryUrl extends Command
 
         // Make request.
 
+        // @FIXME: validate url argument - use query service to do this so validation will be consistent if this is
+        // reused on an HTTP route.
         $url = $this->argument('url');
 
+        // @TODO: QueryService
+        // TODO: decide whether to bail immediately on failure, define number of proxies to retry with, etc.
         foreach ($proxies as $proxy) {
             $curl = curl_init($url);
 
@@ -51,7 +56,7 @@ class QueryUrl extends Command
         }
 
         // Output HTTP headers.
-
+        // @TODO: should be able to use a PSR-4(?) request obj for this
         $parts = explode("\r\n\r\n", $response, 2);
 
         $header = $parts[0];
@@ -62,8 +67,10 @@ class QueryUrl extends Command
 
         $now = date('d/m/Y H:i:s');
 
+        // @TODO: use Storage facade
         file_put_contents(storage_path() . '/logs/results.log', "{$now}: {$url}\r\n", FILE_APPEND);
 
+        // @TODO: use constants for exit codes
         return 0;
     }
 }
