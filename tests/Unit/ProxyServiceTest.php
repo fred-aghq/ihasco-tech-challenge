@@ -1,29 +1,55 @@
 <?php
 
 namespace Tests\Unit;
-use PHPUnit\Framework\TestCase;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
+use Mockery\MockInterface;
+use Tests\TestCase;
+use App\Services\Proxy\ProxyService;
 
 class ProxyServiceTest extends TestCase
 {
-    private ProxyService $unit;
-
-    public function setUp(): void
-    {
-        $this->unit = new ProxyService();
-    }
 
     public function testItReturnsProxiesForCorrectlyConfiguredUrl()
     {
-        $this->assertTrue(false, "test not yet implemented");
-    }
+        $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
+            $mock->shouldReceive('get')
+                ->once()
+                ->andReturn(
+                    new Response(200, [], json_encode([
+                            'https://example-proxy.com',
+                            'https://example-proxy2.com',
+                            'https://example-proxy3.com',
+                        ])
+                    )
+                );
+        });
 
-    public function testItThrowsExceptionForIncorrectlyConfiguredUrl()
-    {
-        $this->assertTrue(false, "test not yet implemented");
+        $unit = new ProxyService($clientMock);
+        $unitResult = $unit->getListOfProxies();
+
+        $this->assertEquals(count($unitResult), 3);
     }
 
     public function testItReturnsEmptyArrayIfNoResults()
     {
-        $this->assertTrue(false, "test not yet implemented");
+        $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
+            $mock->shouldReceive('get')
+                ->with('/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=yes&anonymity=all')
+                ->once()
+                ->andReturn(
+                    new Response(
+                        200,
+                        [],
+                        json_encode([])
+                    )
+                );
+        });
+
+        $unit = new ProxyService($clientMock);
+        $unitResult = $unit->getListOfProxies();
+
+        $this->assertEquals(count($unitResult), 0);
     }
 }
