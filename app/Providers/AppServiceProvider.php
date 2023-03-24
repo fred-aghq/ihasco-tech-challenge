@@ -17,14 +17,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app
             ->when(ProxyService::class)
-            ->needs(Client::class)
-            ->give(function () {
-                return new Client(
-                    [
-                        'base_uri' => config('proxy_list.base_uri'),
-                    ]
-                );
-            });
+            ->needs('$baseUri')
+            ->give(config('proxy_list.base_uri'));
     }
 
     /**

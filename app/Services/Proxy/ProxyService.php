@@ -5,12 +5,18 @@ use GuzzleHttp\Client;
 
 class ProxyService {
     public function __construct(
-        protected Client $client
+        protected Client $client,
+        protected ?string $baseUri
     ) { }
 
     public function getListOfProxies()
     {
-        $response = $this->client->get('/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=yes&anonymity=all');
+        if (!$this->baseUri || !is_string($this->baseUri)) {
+            throw new \Exception('No base URI configured for proxy list');
+        }
+
+        $response = $this->client->get($this->baseUri);
+
         return json_decode($response->getBody()->getContents());
     }
 }
