@@ -38,7 +38,7 @@ class ProxyServiceTest extends TestCase
     {
         $validUri = $this->validUri;
 
-        $clientMock = $this->mock(Client::class, function (MockInterface $mock) use ($validUri) {
+        $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
             $mock->shouldReceive('get')
                 ->with($this->validUri)
                 ->once()
