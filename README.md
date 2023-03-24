@@ -1,5 +1,14 @@
 Time Spent on Challenge:
-24th: 1653 -> 1827
+24th: 1653 -> 1832
+
+Comments:
+- I ran composer update as this wouldnt play with PHP 8.2
+- I wrote the tests first as an exercise in TDD/abstract thinking
+- I removed sail from dev-dependencies, because Sail is just... nah.
+
+Improvements I considered, related to refactoring and improving the command (but decided to keep it simpler...):
+- User-specified number of retries, one per proxy in the list, if the first proxy fails
+- User-specified timeout for the query
 
 # iHASCO Technical Challenge
 
