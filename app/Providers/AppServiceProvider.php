@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Proxy\ProxyService;
+use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +15,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app
+            ->when(ProxyService::class)
+            ->needs(Client::class)
+            ->give(function () {
+                return new Client(
+                    [
+                        'base_uri' => config('proxy_list.base_uri'),
+                    ]
+                );
+            });
     }
 
     /**
