@@ -12,14 +12,20 @@ class UrlQueryService
         protected Client $client
     ) {}
 
-    public function query(string $url): array
+    public function query(string $url, string $proxy = ''): array
     {
         // ValidationException thrown if invalid, to be handled by the caller.
         $this->validateUrl($url);
 
-        $response = $this->client->get($url);
+        $options = [];
 
-        return json_decode($response->getBody()->getContents());
+        if (!empty($$proxy)) {
+            $options['proxy'] = $proxy;
+        }
+
+        $response = $this->client->get($url, $options);
+
+        return $response->getHeaders();
     }
 
     /**

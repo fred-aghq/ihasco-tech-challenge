@@ -54,9 +54,7 @@ class ProxyServiceTest extends TestCase
 
     public function testItReturnsEmptyArrayIfNoResults()
     {
-        $request = new Request('GET', $this->validUri);
-
-        $clientMock = $this->mock(Client::class, function (MockInterface $mock) use ($request) {
+        $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
             $mock->shouldReceive('get')
                 ->with($this->validUri)
                 ->once()
