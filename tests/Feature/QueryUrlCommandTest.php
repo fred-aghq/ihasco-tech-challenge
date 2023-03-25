@@ -30,8 +30,7 @@ class QueryUrlCommandTest extends TestCase
         Log::shouldReceive('channel->info')
             ->once()
             ->withArgs(function ($message) {
-                $now = Carbon::now()->format('Y-m-d H:i:s');
-                $expected = $now . ': https://www.example.com';
+                $expected = 'https://www.example.com';
 
                 return $message === $expected;
             });
