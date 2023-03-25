@@ -48,6 +48,10 @@ return [
     */
 
     'channels' => [
+        'queryUrl' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/results.log'),
+        ],
         'stack' => [
             'driver' => 'stack',
             'channels' => ['single'],

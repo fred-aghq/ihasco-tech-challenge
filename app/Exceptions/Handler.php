@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
+use GuzzleHttp\Exception\TransferException;
+use GuzzleHttp\Psr7\Message;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -34,8 +39,12 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->reportable(function (ClientException|ServerException $e) {
+            Log::error('Error making request to external API', [
+                'message' => $e->getMessage(),
+                'request' => Message::toString($e->getRequest()),
+                'response' => Message::toString($e->getResponse()),
+            ]);
         });
     }
 }

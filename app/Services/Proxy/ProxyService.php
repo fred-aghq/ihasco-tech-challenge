@@ -16,19 +16,9 @@ class ProxyService {
         protected string $baseUri
     ) { }
 
-    public function getListOfProxies(): array
+    public function getProxyList(): array
     {
-        try {
-            $response = $this->client->get($this->baseUri);
-        }
-        catch(TransferException $e) {
-            // @TODO: Move to an exception handler so this pattern is more DRY
-            Log::error('Problem requesting proxy list', [
-                'message' => $e->getMessage(),
-                'request' => Message::toString($e->getRequest()),
-                'response' => Message::toString($e->getResponse()),
-            ]);
-        }
+        $response = $this->client->get($this->baseUri);
 
         if ($response->getStatusCode() === Response::HTTP_OK) {
             $content = $response->getBody()->getContents();
