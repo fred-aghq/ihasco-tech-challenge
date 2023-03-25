@@ -46,7 +46,7 @@ class ProxyServiceTest extends TestCase
         });
 
         $unit = new ProxyService($clientMock, $this->validUri);
-        $unitResult = $unit->getListOfProxies();
+        $unitResult = $unit->getProxyList();
 
         $this->assertEquals(count($unitResult), 3);
         $this->assertEquals($unitResult, $this->validProxyList);
@@ -68,7 +68,7 @@ class ProxyServiceTest extends TestCase
         });
 
         $unit = new ProxyService($clientMock, $this->validUri);
-        $unitResult = $unit->getListOfProxies();
+        $unitResult = $unit->getProxyList();
 
         $this->assertEquals(count($unitResult), 0);
     }
@@ -93,6 +93,6 @@ class ProxyServiceTest extends TestCase
         $unit = new ProxyService($clientMock, $this->validUri);
 
         $this->expectException(\Exception::class, 'Problem requesting proxy list, check logs for more info');
-        $unitResult = $unit->getListOfProxies();
+        $unitResult = $unit->getProxyList();
     }
 }
