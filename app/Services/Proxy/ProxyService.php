@@ -22,6 +22,7 @@ class ProxyService {
             $response = $this->client->get($this->baseUri);
         }
         catch(TransferException $e) {
+            // @TODO: Move to an exception handler so this pattern is more DRY
             Log::error('Problem requesting proxy list', [
                 'message' => $e->getMessage(),
                 'request' => Message::toString($e->getRequest()),
@@ -30,7 +31,13 @@ class ProxyService {
         }
 
         if ($response->getStatusCode() === Response::HTTP_OK) {
-            return json_decode($response->getBody()->getContents());
+            $content = $response->getBody()->getContents();
+
+            if (strlen($content) > 0) {
+                return explode("\n", $content);
+            }
+
+            return [];
         }
 
         throw new \Exception('Problem requesting proxy list, check logs for more info');
