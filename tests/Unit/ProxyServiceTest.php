@@ -15,6 +15,7 @@ class ProxyServiceTest extends TestCase
 
     private string $validUri = '';
     private array $validProxyList = [];
+    private string $validProxyListRaw = '';
 
     public function setUp(): void
     {
@@ -28,6 +29,8 @@ class ProxyServiceTest extends TestCase
             'https://example-proxy2.com',
             'https://example-proxy3.com',
         ];
+
+        $this->validProxyListRaw = "https://example-proxy.com\nhttps://example-proxy2.com\nhttps://example-proxy3.com";
     }
 
     public function testItReturnsProxiesIfResults()
@@ -37,7 +40,7 @@ class ProxyServiceTest extends TestCase
                 ->with($this->validUri)
                 ->once()
                 ->andReturn(
-                    new Response(200, [], json_encode($this->validProxyList)
+                    new Response(200, [], $this->validProxyListRaw
                     )
                 );
         });
@@ -46,10 +49,10 @@ class ProxyServiceTest extends TestCase
         $unitResult = $unit->getListOfProxies();
 
         $this->assertEquals(count($unitResult), 3);
+        $this->assertEquals($unitResult, $this->validProxyList);
     }
 
-    public
-    function testItReturnsEmptyArrayIfNoResults()
+    public function testItReturnsEmptyArrayIfNoResults()
     {
         $request = new Request('GET', $this->validUri);
 
@@ -61,7 +64,7 @@ class ProxyServiceTest extends TestCase
                     new Response(
                         200,
                         [],
-                        json_encode([])
+                        ''
                     )
                 );
         });
@@ -84,7 +87,7 @@ class ProxyServiceTest extends TestCase
                     new Response(
                         500,
                         [],
-                        json_encode([])
+                        ''
                     )
                 );
         });
