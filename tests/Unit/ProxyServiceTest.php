@@ -3,51 +3,41 @@
 namespace Tests\Unit;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Illuminate\Support\Facades\Config;
 use Mockery\MockInterface;
 use Tests\TestCase;
 use App\Services\Proxy\ProxyService;
 
 class ProxyServiceTest extends TestCase
 {
+
     private string $validUri = '';
+    private array $validProxyList = [];
 
     public function setUp(): void
     {
         parent::setUp();
 
         $this->validUri = 'https://example-proxy-api.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=yes&anonymity=all';
+
+        // I'd use @dataProvider if this was any more complex
+        $this->validProxyList = [
+            'https://example-proxy.com',
+            'https://example-proxy2.com',
+            'https://example-proxy3.com',
+        ];
     }
 
-    public function testItThrowsExceptionIfNoUrlConfigured()
+    public function testItReturnsProxiesIfResults()
     {
-        $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
-            $mock->shouldReceive('get')
-                ->never();
-        });
-
-        $this->expectException(\TypeError::class);
-
-        $unit = new ProxyService($clientMock, null);
-        $unit->getListOfProxies();
-    }
-
-    public function testItReturnsProxiesForCorrectlyConfiguredUrl()
-    {
-        $validUri = $this->validUri;
-
         $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
             $mock->shouldReceive('get')
                 ->with($this->validUri)
                 ->once()
                 ->andReturn(
-                    new Response(200, [], json_encode([
-                            'https://example-proxy.com',
-                            'https://example-proxy2.com',
-                            'https://example-proxy3.com',
-                        ])
+                    new Response(200, [], json_encode($this->validProxyList)
                     )
                 );
         });
@@ -58,9 +48,12 @@ class ProxyServiceTest extends TestCase
         $this->assertEquals(count($unitResult), 3);
     }
 
-    public function testItReturnsEmptyArrayIfNoResults()
+    public
+    function testItReturnsEmptyArrayIfNoResults()
     {
-        $clientMock = $this->mock(Client::class, function (MockInterface $mock) {
+        $request = new Request('GET', $this->validUri);
+
+        $clientMock = $this->mock(Client::class, function (MockInterface $mock) use ($request) {
             $mock->shouldReceive('get')
                 ->with($this->validUri)
                 ->once()
@@ -77,5 +70,28 @@ class ProxyServiceTest extends TestCase
         $unitResult = $unit->getListOfProxies();
 
         $this->assertEquals(count($unitResult), 0);
+    }
+
+    public function testItThrowsExceptionIfRequestUnsuccessful()
+    {
+        $request = new Request('GET', $this->validUri);
+
+        $clientMock = $this->mock(Client::class, function (MockInterface $mock) use ($request) {
+            $mock->shouldReceive('get')
+                ->with($this->validUri)
+                ->once()
+                ->andReturn(
+                    new Response(
+                        500,
+                        [],
+                        json_encode([])
+                    )
+                );
+        });
+
+        $unit = new ProxyService($clientMock, $this->validUri);
+
+        $this->expectException(\Exception::class, 'Problem requesting proxy list, check logs for more info');
+        $unitResult = $unit->getListOfProxies();
     }
 }
