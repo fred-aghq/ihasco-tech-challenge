@@ -67,7 +67,7 @@ class QueryUrl extends Command
 
         $now = date('d/m/Y H:i:s');
 
-        // @TODO: use Storage facade
+        // @TODO: use LOGGER
         file_put_contents(storage_path() . '/logs/results.log', "{$now}: {$url}\r\n", FILE_APPEND);
 
         // @TODO: use constants for exit codes

@@ -27,5 +27,6 @@
         <server name="QUEUE_CONNECTION" value="sync"/>
         <server name="SESSION_DRIVER" value="array"/>
         <server name="TELESCOPE_ENABLED" value="false"/>
+        <server name="PROXY_LIST_API_BASE_URI" value="https://www.example-proxy-list.com"/>
     </php>
 </phpunit>
