@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class QueryUrl extends Command
 {
-    protected $signature = 'query:url {url?} --retries=5';
+    protected $signature = 'query:url {url?}';
 
     protected $description = 'Uses the first available proxy to query a URL and return the headers';
 
@@ -56,15 +56,21 @@ class QueryUrl extends Command
             return self::FAILURE;
         }
 
-        // Find a proxy.
-        $proxyList = $this->getProxyList();
+        try {
+            $proxyList = $this->getProxyList();
 
-        $headers = $this->urlQueryService->query($url, $proxyList[0]);
+            $headers = $this->urlQueryService->query($url, $proxyList[0]);
 
-        $this->writeHeaders($headers);
+            $this->writeHeaders($headers);
 
-        $this->logRequest($url);
+            $this->logRequest($url);
 
-        return self::SUCCESS;
+            return self::SUCCESS;
+        }
+        catch (\Exception $e) {
+            $this->error('ERROR: ' . $e->getMessage());
+        }
+
+        return self::FAILURE;
     }
 }
