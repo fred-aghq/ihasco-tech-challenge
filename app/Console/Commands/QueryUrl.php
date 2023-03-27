@@ -7,6 +7,7 @@ use App\Services\UrlQuery\UrlQueryService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class QueryUrl extends Command
 {
@@ -27,28 +28,34 @@ class QueryUrl extends Command
     }
 
     private function writeHeaders(array $headers): void {
+
         foreach($headers as $name => $values) {
-            $this->line($name . ': ' . implode(', ', $values));
+            $line = $name . ': ' . implode(', ', $values);
+            $this->line($line);
         }
     }
 
     private function logRequest(string $url) {
         $now = Carbon::now()->format('Y-m-d H:i:s');
-
-        // @TODO: use LOGGER
         Log::channel('queryUrl')->info($url);
     }
 
     public function handle()
     {
-        $url = $this->argument('url');
-
-
-        while (empty($url)) {
-            $url = $this->ask('Enter URL to query');
-        }
+        $url = $this->argument('url') ?? $this->ask('Enter URL to query');
 
         // @TODO: validate URL
+        $validator = Validator::make([
+            'url' => $url,
+        ],
+        [
+            'url' => 'required|url',
+        ]);
+
+        if (empty($url) || $validator->fails()) {
+            $this->error('Invalid URL');
+            return self::FAILURE;
+        }
 
         // Find a proxy.
         $proxyList = $this->getProxyList();
