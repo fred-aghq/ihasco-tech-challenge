@@ -2,75 +2,75 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Proxy\ProxyService;
+use App\Services\UrlQuery\UrlQueryService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class QueryUrl extends Command
 {
-    protected $signature = 'query:url {url}';
+    protected $signature = 'query:url {url?}';
 
-    protected $description = 'N/A';
+    protected $description = 'Uses the first available proxy to query a URL and return the headers';
 
-    public function __construct()
-    {
+    public function __construct(
+        private ProxyService $proxyService,
+        private UrlQueryService $urlQueryService
+    ) {
         parent::__construct();
+    }
+
+    private function getProxyList(): array
+    {
+        return $this->proxyService->getProxyList();
+    }
+
+    private function writeHeaders(array $headers): void {
+
+        foreach($headers as $name => $values) {
+            $line = $name . ': ' . implode(', ', $values);
+            $this->line($line);
+        }
+    }
+
+    private function logRequest(string $url) {
+        $now = Carbon::now()->format('Y-m-d H:i:s');
+        Log::channel('queryUrl')->info($url);
     }
 
     public function handle()
     {
-        // Find a proxy.
+        $url = $this->argument('url') ?? $this->ask('Enter URL to query');
 
-        // @FIXME: rewrite as ProxyService and accept dependencies via constructor (maybe even service provider)
-        $curl = curl_init('https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=yes&anonymity=all');
+        $validator = Validator::make([
+            'url' => $url,
+        ],
+        [
+            'url' => 'required|url',
+        ]);
 
-        curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        $proxies = explode("\n", $response);
-
-        // Make request.
-
-        // @FIXME: validate url argument - use query service to do this so validation will be consistent if this is
-        // reused on an HTTP route.
-        $url = $this->argument('url');
-
-        // @TODO: QueryService
-        // TODO: decide whether to bail immediately on failure, define number of proxies to retry with, etc.
-        foreach ($proxies as $proxy) {
-            $curl = curl_init($url);
-
-            curl_setopt($curl, CURLOPT_HEADER, 1);
-            curl_setopt($curl, CURLOPT_PROXY, $proxy);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-
-            if (!$response) {
-                continue;
-            }
+        if (empty($url) || $validator->fails()) {
+            $this->error('Invalid URL');
+            return self::FAILURE;
         }
 
-        // Output HTTP headers.
-        // @TODO: should be able to use a PSR-4(?) request obj for this
-        $parts = explode("\r\n\r\n", $response, 2);
+        try {
+            $proxyList = $this->getProxyList();
 
-        $header = $parts[0];
+            $headers = $this->urlQueryService->query($url, $proxyList[0]);
 
-        $this->line($header);
+            $this->writeHeaders($headers);
 
-        // Log this request.
+            $this->logRequest($url);
 
-        $now = date('d/m/Y H:i:s');
+            return self::SUCCESS;
+        }
+        catch (\Exception $e) {
+            $this->error('ERROR: ' . $e->getMessage());
+        }
 
-        // @TODO: use LOGGER
-        file_put_contents(storage_path() . '/logs/results.log', "{$now}: {$url}\r\n", FILE_APPEND);
-
-        // @TODO: use constants for exit codes
-        return 0;
+        return self::FAILURE;
     }
 }

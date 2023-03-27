@@ -1,56 +1,33 @@
-Time Spent on Challenge:
-24th: 1653 -> 1832
-
-Comments:
-- I ran composer update as this wouldnt play with PHP 8.2
-- I wrote the tests first as an exercise in TDD/abstract thinking
-- I removed sail from dev-dependencies, because Sail is just... nah.
-
-Improvements I considered, related to refactoring and improving the command (but decided to keep it simpler...):
-- User-specified number of retries, one per proxy in the list, if the first proxy fails
-- User-specified timeout for the query
-
-# iHASCO Technical Challenge
-
-## Introduction
-
-This package contains a single Artisan command which:
-
-- Accepts a URL as an argument on the CLI.
-- Queries an API to find an open proxy.
-- Makes a request to the given URI via an open proxy.
-- Outputs the returned HTTP headers to the console.
-- Logs the request to a file.
-
-Once installed, the command can be executed using (for example):
-
-`php artisan query:url https://www.google.co.uk/`
+> If using Sail, prepend the commands appropriately as documented on laravel.com
 
 ## Installation
+`composer install`
 
-Follow the usual Composer install procedure.
+`cp .env.example .env`
 
-## Objective
+## Usage
+`php artisan query:url https://www.google.co.uk/`
 
-The existing code for this command has a number of problems:
+## Testing
+`php artisan test`
 
-- It's messy.
-- It has no type information.
-- It does not follow SOLID/OOP principles.
-- There's no error (or "sad path") handling.
-- There are no tests - because...
-- It's not testable.
+Comments:
+- About 5hrs spent overall - I was enjoying the exercise.
+- I ran composer update as this wouldnt play with PHP 8.2..
+- I wrote the tests first as an exercise in TDD/abstract thinking
+- I'm a bit rusty with PHPUnit integrated into Laravel; the last TDD i performed was using Behat on Symfony, so I took a little longer
+on this to refresh my memory.
+- I've attempted to demonstrate both knowledge of Laravel as well as abstract OOP principles and Unit testing in PHP.
+- With that in mind, I kinda wish I'd gone with the `Http` facade, but again, trying to demonstrate use of DI for testable code.
+- I got a bit stuck using the Validator facade when it came to testing, as a Unit test shouldn't really be bootstrapping the app, but the Facade needs this
+- Validation messages could've been stronger - i didn't look into reading the error message bag and validation in laravel is very geared towards convenience on http routes
+- I would have preferred to use async/promises after having spent some time on js but I was concerned this would eat up time while I figure it out and how to test it.
+- I appreciate the comments in the code are sparse, but I should hope that the code is pretty readable and self-explanatory! I write comments when it's important to explain complex thought processes, or even the reason *why* a piece of code may be the way it is.
 
-Your task is to refactor the code to resolve these issues - and then write your own tests (e.g. unit tests) to boot.
+Limitations
+- The console command will only try the first proxy in the list, and will not retry if it fails. I wanted to circle back around to this but I am out of time.
+  - I hope this doesn't detract from the code and tests too much, as I am aware that the original code did this.
+- No specifiable timeout
+- I'd have liked to add a buildable query string based on options rather than the full URL for the proxy list API in the env file.
+- Error handling is fairly robust on the service classes, but a bit minimal in the console command, which I wrote last after the services.
 
-## Acceptance criteria
-
-We're ultimately hoping to gauge your understanding of type safety, software testing, SOLID/OOP patterns and principles and such.
-
-Our minimum expectations are that:
-
-- There is a good test suite - and tests don't make any API calls or write to disk.
-- There is a sensible level of error handling.
-- Some attempt has been made to include type information using PHP's own type system as much as possible - only using PHPDoc as a last resort.
-
-Feel free to include comments (either in the code itself or as a separate document) elaborating on your thought processes e.g. if there are any decisions that you want to explain, there's any ambiguity that you were unsure about, etc.
