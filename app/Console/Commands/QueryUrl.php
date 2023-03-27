@@ -13,7 +13,7 @@ class QueryUrl extends Command
 {
     protected $signature = 'query:url {url?} --retries=5';
 
-    protected $description = 'N/A';
+    protected $description = 'Uses the first available proxy to query a URL and return the headers';
 
     public function __construct(
         private ProxyService $proxyService,
@@ -44,7 +44,6 @@ class QueryUrl extends Command
     {
         $url = $this->argument('url') ?? $this->ask('Enter URL to query');
 
-        // @TODO: validate URL
         $validator = Validator::make([
             'url' => $url,
         ],
@@ -60,17 +59,12 @@ class QueryUrl extends Command
         // Find a proxy.
         $proxyList = $this->getProxyList();
 
-        // Make request.
-
-        // TODO: decide whether to bail immediately on failure, define number of proxies to retry with, etc.
         $headers = $this->urlQueryService->query($url, $proxyList[0]);
 
         $this->writeHeaders($headers);
 
-        // Log this request.
         $this->logRequest($url);
 
-        // @TODO: use constants for exit codes
         return self::SUCCESS;
     }
 }
