@@ -11,6 +11,7 @@ use GuzzleHttp\Handler\Proxy;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -26,7 +27,45 @@ class QueryUrlCommandTest extends TestCase
 
     public function testItRunsSuccessfullyWithCorrectInput()
     {
-        // prep log facade
+        Log::shouldReceive('channel->info')
+            ->once()
+            ->withArgs(function ($message) {
+                $expected = 'https://www.example.com';
+
+                return $message === $expected;
+            })
+            ->andReturnNull();
+
+        $mockProxyService = $this->mock(ProxyService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getProxyList')
+                ->once()
+                ->andReturn([
+                    'https://exampleproxy1.com:8888',
+                ]);
+        });
+
+        $mockQueryService = $this->mock(UrlQueryService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('query')
+                ->once()
+                ->withArgs(function ($url, $proxy) {
+                    return $url === 'https://www.example.com' && $proxy === 'https://exampleproxy1.com:8888';
+                })
+                ->andReturn([
+                        'X-FOO-BAR' => ['baz'],
+                        'X-FOO-BAZ' => ['bar'],
+                ]);
+        });
+
+        // run command
+        $this
+            ->artisan('query:url https://www.example.com')
+            ->expectsOutput('X-FOO-BAR: baz')
+            ->expectsOutput('X-FOO-BAZ: bar')
+            ->assertSuccessful();
+    }
+
+    public function testItAsksForUrlIfNotPassedAsArg()
+    {
         Log::shouldReceive('channel->info')
             ->once()
             ->withArgs(function ($message) {
@@ -35,16 +74,15 @@ class QueryUrlCommandTest extends TestCase
                 return $message === $expected;
             });
 
-        $mockProxyService = $this->mock(ProxyService::class, function(MockInterface $mock) {
+        $mockProxyService = $this->mock(ProxyService::class, function (MockInterface $mock) {
             $mock->shouldReceive('getProxyList')
                 ->once()
                 ->andReturn([
                     'https://exampleproxy1.com:8888',
-                    'https://exampleproxy2.com:8998',
                 ]);
         });
 
-        $mockQueryService = $this->mock(UrlQueryService::class, function(MockInterface $mock) {
+        $mockQueryService = $this->mock(UrlQueryService::class, function (MockInterface $mock) {
             $mock->shouldReceive('query')
                 ->once()
                 ->withArgs(function ($url, $proxy) {
@@ -57,16 +95,10 @@ class QueryUrlCommandTest extends TestCase
                 ]);
         });
 
-        // run command
         $this
-            ->artisan('query:url https://www.example.com')
+            ->artisan('query:url')
+            ->expectsQuestion('Enter URL to query', 'https://www.example.com')
             ->assertSuccessful();
-    }
-
-    public function testItFailsGracefullyIfUrlMissing()
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->artisan('query:url')->assertFailed();
     }
 
     public function testItFailsGracefullyIfUrlInvalid()
